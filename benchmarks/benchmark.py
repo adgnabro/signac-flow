@@ -57,6 +57,9 @@ COMPLEXITY = {
     "search_rich_filter": "N",
     "determine_len": "N",
     "select_by_id": "1",
+    "print_status": "N",
+    "run_operations": "N",
+    "submit_operations": "N",
 }
 
 
@@ -144,7 +147,7 @@ def _make_job(project, num_keys, num_doc_keys, data_size, data_std, i):
 
 
 def generate_random_data(
-    project, N_sp, num_keys=1, num_doc_keys=0, data_size=0, data_std=0, parallel=True
+    project, N_sp, num_keys=1, num_doc_keys=0, data_size=0, data_std=0, parallel=False
 ):
     assert len(project) == 0
 
