@@ -3,10 +3,10 @@
 # This software is licensed under the BSD 3-Clause License.
 """Miscellaneous utility functions."""
 import argparse
-import json
 import logging
 import os
 from contextlib import contextmanager
+from functools import lru_cache, partial
 from itertools import cycle, islice
 
 
@@ -38,16 +38,6 @@ def _positive_int(value):
     except (TypeError, ValueError):
         raise argparse.ArgumentTypeError(f"{value} must be a positive integer.")
     return ivalue
-
-
-def write_human_readable_statepoint(script, job):
-    """Human-readable representation of a signac state point."""
-    script.write("# Statepoint:\n#\n")
-    sp_dump = (
-        json.dumps(job.statepoint(), indent=2).replace("{", "{{").replace("}", "}}")
-    )
-    for line in sp_dump.splitlines():
-        script.write("# " + line + "\n")
 
 
 @contextmanager
@@ -235,3 +225,29 @@ def _to_hashable(obj):
         return _hashable_dict(obj)
     else:
         return obj
+
+
+def _cached_partial(func, *args, maxsize=None, **kwargs):
+    r"""Cache the results of a partial.
+
+    Useful for wrapping functions that must only be evaluated lazily, one time.
+
+    Parameters
+    ----------
+    func : callable
+        The function to call.
+    \*args
+        Positional arguments bound to the function.
+    maxsize : int
+        The maximum size of the LRU cache, or None for no limit. (Default value
+        = None)
+    \*\*kwargs
+        Keyword arguments bound to the function.
+
+    Returns
+    -------
+    callable
+        Function with bound arguments and cached return values.
+
+    """
+    return lru_cache(maxsize=maxsize)(partial(func, *args, **kwargs))
