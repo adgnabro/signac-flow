@@ -12,6 +12,12 @@ class ConfigKeyError(KeyError):
     pass
 
 
+class DirectivesError(ValueError):
+    """Indicates that a directive was incorrectly set."""
+
+    pass
+
+
 class SubmitError(RuntimeError):
     "Indicates an error during cluster job submission."
     pass
@@ -34,14 +40,16 @@ class UserOperationError(RuntimeError):
 
 class TemplateError(Jinja2Extension):
     """Indicates errors in jinja2 templates"""
+
     # ref:http://jinja.pocoo.org/docs/2.10/extensions/#jinja-extensions
-    tags = set(['raise'])
+    tags = {"raise"}
 
     def parse(self, parser):
         lineno = next(parser.stream).lineno
         args = [parser.parse_expression()]
         return jinja2.nodes.CallBlock(
-            self.call_method('err', args), [], [], []).set_lineno(lineno)
+            self.call_method("err", args), [], [], []
+        ).set_lineno(lineno)
 
     def err(self, msg, caller):
         raise jinja2.TemplateError(msg)
