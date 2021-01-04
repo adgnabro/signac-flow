@@ -27,6 +27,9 @@ from .scheduling.simple_scheduler import SimpleScheduler
 from .scheduling.fakescheduler import FakeScheduler
 from .util import config as flow_config
 from .errors import NoSchedulerError
+from .directives import (
+    _Directives, _NP, _NGPU, _NRANKS, _OMP_NUM_THREADS, _WALLTIME, _EXECUTABLE,
+    _PROCESSOR_FRACTION)
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +207,7 @@ class ComputeEnvironment(metaclass=ComputeEnvironmentType):
         :type omp_prefix:
             str
         """
-        return 'export OMP_NUM_THREADS={}\n'.format(operation.directives['omp_num_threads'])
+        return 'export OMP_NUM_THREADS={}; '.format(operation.directives['omp_num_threads'])
 
     @classmethod
     def _get_mpi_prefix(cls, operation, parallel):
@@ -259,6 +262,12 @@ class ComputeEnvironment(metaclass=ComputeEnvironmentType):
         # if cmd_prefix and if mpi_prefix for backwards compatibility
         # Can change to get them from directives for future
         return prefix
+
+    @classmethod
+    def _get_default_directives(cls):
+        return _Directives(
+            [_NP, _NGPU, _NRANKS, _OMP_NUM_THREADS,
+             _EXECUTABLE, _WALLTIME, _PROCESSOR_FRACTION])
 
 
 class StandardEnvironment(ComputeEnvironment):
@@ -342,6 +351,10 @@ class DefaultSlurmEnvironment(NodesEnvironment, SlurmEnvironment):
     @classmethod
     def add_args(cls, parser):
         super(DefaultSlurmEnvironment, cls).add_args(parser)
+        parser.add_argument(
+            '--memory',
+            help=("Specify how much memory to reserve per node, e.g. \"4g\" for 4 gigabytes "
+                  "or \"512m\" for 512 megabytes. Only relevant for shared queue jobs."))
         parser.add_argument(
             '-w', '--walltime',
             type=float,

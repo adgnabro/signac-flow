@@ -115,6 +115,15 @@ def init(project):
                 'bundle': [['mpi_op', 'omp_op']],
             }
         ],
+        'environments.umn.MangiEnvironment': [
+            {
+                'walltime': [None, 1],
+            },
+            {
+                'parallel': [False, True],
+                'bundle': [['mpi_op', 'omp_op']],
+            }
+        ],
     }
 
     for environment, parameter_combinations in environments.items():
@@ -133,9 +142,6 @@ def _store_bundled(self, operations):
         h = '.'.join(op.id for op in operations)
         bid = '{}/bundle/{}'.format(self, sha1(h.encode('utf-8')).hexdigest())
         return bid
-
-
-flow.FlowProject._store_bundled = _store_bundled
 
 
 def get_masked_flowproject(p):
@@ -188,7 +194,7 @@ def main(args):
                         with redirect_stdout(f):
                             print(tmp_out.read(), end='')
                 else:
-                    for op in fp.operations:
+                    for op in {**fp.operations, **fp.groups}:
                         if 'partition' in parameters:
                             # Don't try to submit GPU operations to CPU partitions
                             # and vice versa.  We should be able to relax this
@@ -219,6 +225,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    flow.FlowProject._store_bundled = _store_bundled
+
     parser = argparse.ArgumentParser(
         description="Generate reference submission scripts for various environments")
     parser.add_argument(
